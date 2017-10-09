@@ -314,6 +314,12 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST" || count($errors) > 0) {
                 <button class="blue ui button" type="submit"><i class="icon download"></i> Generate GIFT</button>
             </div>
         </div>
+
+        <div>
+            <a href="" class="green ui button" id="add_multiple_choice"><i class="icon add"></i> Add multiple choice</a>
+            <a href="" class="green ui button" id="add_matching_example"><i class="icon add"></i> Add matching example</a>
+        </div>    
+
             <div class="field source">
                 <textarea id="source" name="source" placeholder="Put your question here" required><?php echo $source; ?></textarea>
             </div>
@@ -332,6 +338,20 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST" || count($errors) > 0) {
                 return false;
             }
             return true;
+        });
+
+
+        var currentVal = $("textarea[name=source]").val();     
+        $("#add_multiple_choice").on("click", function() {
+            event.preventDefault();
+            //append multiple choice sample text to textarea
+            $("textarea[name=source]").append("1.Who is Indonesia's 1st president? \n*a.Ir. Sukarno\nb.Moh. Hatta \nc.Sukarno Hatta \nd.Suharto \n\n");
+        });
+
+        $("#add_matching_example").on("click", function() {
+            event.preventDefault();
+            //append matching example to textarea
+            $("textarea[name=source]").append("Matching.Match each definition about space below \n1.Saturn’s largest moon * Mercury \n2.The 2nd biggest planet in our solar system * Saturn \n3.The hottest planet in our solar system * Venus \n4.Planet famous for its big red spot on it * Jupiter \n5.Planet known as the red planet * Mars \n6.Saturn’s largest moon * Titan\n\n");
         });
     </script>
 
