@@ -318,7 +318,15 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST" || count($errors) > 0) {
         <div>
             <a href="" class="green ui button" id="add_multiple_choice"><i class="icon add"></i> Add multiple choice</a>
             <a href="" class="green ui button" id="add_matching_example"><i class="icon add"></i> Add matching example</a>
+
+            <div class="ui buttons">
+              <a href="" class="green ui button" id="add_true_choice"><i class="icon add"></i> Add True</a>
+              <div class="or"></div>
+              <a href="" class="red ui button" id="add_false_choice"><i class="icon add"></i> Add False</a>
+            </div>
         </div>    
+
+
 
             <div class="field source">
                 <textarea id="source" name="source" placeholder="Put your question here" required><?php echo $source; ?></textarea>
@@ -353,6 +361,19 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST" || count($errors) > 0) {
             //append matching example to textarea
             $("textarea[name=source]").append("Matching.Match each definition about space below \n1.Saturn’s largest moon * Mercury \n2.The 2nd biggest planet in our solar system * Saturn \n3.The hottest planet in our solar system * Venus \n4.Planet famous for its big red spot on it * Jupiter \n5.Planet known as the red planet * Mars \n6.Saturn’s largest moon * Titan\n\n");
         });
+
+        $("#add_true_choice").on("click", function() {
+            event.preventDefault();
+            //append true choice
+            $("textarea[name=source]").append("True.TrueStatement about Grant\nGrant was buried in a tomb in New York City.{true} \n\n");
+        });
+
+        $("#add_false_choice").on("click", function() {
+            event.preventDefault();
+            //append false choice
+            $("textarea[name=source]").append("False.FalseStatement about the sun\nThe sun rises in the west.{false} \n\n");
+        });
+        
     </script>
 
 </body>
