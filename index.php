@@ -56,6 +56,22 @@ function parseMatching($lines)
     return $question;
 }
 
+function parseTFChoice($lines, $tf)
+{
+    $question = [];
+    $subquestions = [];
+
+            $question["name"] = convertToSafeName($lines[1]);
+            $question["question"] = convertToSafeHTML($lines[2]);
+            $question["type"] = $tf;
+
+            $subquestions[1]["text"] = $tf;
+            $subquestions[2]["answer"] = $lines[1];
+
+    $question["subquestions"] = $subquestions;
+    return $question;
+}
+
 function isOption($str)
 {
     $firstDot = strpos($str, ".");
@@ -140,6 +156,30 @@ function validateQuestionMatching($question)
     return $errors;
 }
 
+function validateQuestionTF($question, $type)
+{
+    $errors = [];
+    $question_text = trim($question["question"]);
+    if (empty($question_text)) {
+        array_push($errors, "Empty question");
+    }
+    if (count($question["subquestions"]) <= 0) {
+        array_push($errors, "No details provided");
+    } else {
+        foreach ($question["subquestions"] as $index => $option) {
+            $option_text = trim($option["text"]);
+            $option_answer = trim($option["answer"]);
+            if (empty($option_text)) {
+                array_push($errors, ($index + 1)." : empty subquestion text");
+            }
+            if (empty($option_answer)) {
+                array_push($errors, ($index + 1)." : empty subquestion answer");
+            }
+        }
+    }
+    return $errors;
+}
+
 function validateQuestions($questions)
 {
     $errors = [];
@@ -148,7 +188,11 @@ function validateQuestions($questions)
             $errors_temp = validateQuestionMultipleChoice($question);
         } else if ($question["type"] == "matching") {
             $errors_temp = validateQuestionMatching($question);
-        }
+        } /*else if ($question["type"] == "truey") {
+            $errors_temp = validateQuestionTF($question, "truey");
+        } else if ($question["type"] == "falsey") {
+            $errors_temp = validateQuestionTF($question, "falsey");
+        }*/
         if (count($errors_temp) > 0) {
             $errors[$index] = $errors_temp;
         }
@@ -170,14 +214,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $lines = explode("\n", trim($q));
             if (strpos(strtolower($lines[0]), "matching") === 0) {
                 $questions[$i] = parseMatching($lines);
-            } else {
+            } elseif (strpos(strtolower($lines[0]), "multiple") === 0) {
                 $questions[$i] = parseMultipleChoice($lines);
+            } elseif (strpos(strtolower($lines[0]), 'true') === 0) {
+                $questions[$i] = parseTFChoice($lines,"true");
+            } elseif (strpos(strtolower($lines[0]), 'false') === 0) {
+                $questions[$i] = parseTFChoice($lines, "false");
+            } else {
+                //do nothing
             }
         }
     }
 
     $errors = validateQuestions($questions);
-    // var_dump($questions);
+    //var_dump($questions);
+    /*echo "<pre>";
+    print_r($lines);
+    echo "</pre>";
+    exit;*/
+
     if (count($errors) == 0) {
         renderGift($questions, $filename);
     }
@@ -200,25 +255,33 @@ function convertToSafeHTML($str)
     return $str;
 }
 
+
 function renderGift($questions, $filename)
 {
+
     header('Content-type: text/plain');
     header('Content-Disposition: attachment; filename="'.$filename.'"');
 
     foreach ($questions as $q) {
         echo "::".$q["name"]."::";
-        echo "[html]<p>".$q["question"]."<br></p>";
-        echo "{\n";
+        echo "[html]<p>".$q["question"];
+
         if ($q["type"] == "multiple-choice") {
+            echo "<br></p>{\n";
             foreach ($q["options"] as $o) {
                 echo "\t";
                 echo ($o["answer"]) ? "=" : "~";
                 echo "<p>".$o["text"]."</p>\n";
             }
         } elseif ($q["type"] == "matching") {
+            echo "<br></p>{\n";
             foreach ($q["subquestions"] as $o) {
                 echo "\t=<p>".$o["text"]."<br></p> -> ".$o["answer"]."\n";
             }
+        } elseif ($q["type"] === "true") {
+            echo "{TRUE";
+        } elseif ($q["type"] === "false") {
+            echo "{FALSE";
         }
         echo "}\n\n";
     }
@@ -315,6 +378,22 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST" || count($errors) > 0) {
             </div>
         </div>
 
+        <div class="ui accordion">
+          <div class="title">
+            <i class="dropdown icon"></i>
+            Need some help?
+          </div>
+          <div class="content">
+            <p class="transition hidden">
+                Multiple choice button<br>
+                Matching example button<br>
+                True/False buttons<br>
+                                                
+            </p>
+            <br>
+          </div>
+        </div>
+
         <div>
             <a href="" class="green ui button" id="add_multiple_choice"><i class="icon add"></i> Add multiple choice</a>
             <a href="" class="green ui button" id="add_matching_example"><i class="icon add"></i> Add matching example</a>
@@ -348,12 +427,15 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST" || count($errors) > 0) {
             return true;
         });
 
+        $('.ui.accordion')
+          .accordion()
+        ;
 
         var currentVal = $("textarea[name=source]").val();     
         $("#add_multiple_choice").on("click", function() {
             event.preventDefault();
             //append multiple choice sample text to textarea
-            $("textarea[name=source]").append("1.Who is Indonesia's 1st president? \n*a.Ir. Sukarno\nb.Moh. Hatta \nc.Sukarno Hatta \nd.Suharto \n\n");
+            $("textarea[name=source]").append("Multiple\n1.Who is Indonesia's 1st president? \n*a.Ir. Sukarno\nb.Moh. Hatta \nc.Sukarno Hatta \nd.Suharto \n\n");
         });
 
         $("#add_matching_example").on("click", function() {
@@ -365,15 +447,15 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST" || count($errors) > 0) {
         $("#add_true_choice").on("click", function() {
             event.preventDefault();
             //append true choice
-            $("textarea[name=source]").append("True.TrueStatement about Grant\nGrant was buried in a tomb in New York City.{true} \n\n");
+            $("textarea[name=source]").append("True\nTrueStatement about Grant\nGrant was buried in a tomb in New York City. \n\n");
         });
 
         $("#add_false_choice").on("click", function() {
             event.preventDefault();
             //append false choice
-            $("textarea[name=source]").append("False.FalseStatement about the sun\nThe sun rises in the west.{false} \n\n");
+            $("textarea[name=source]").append("False\nFalseStatement about the sun\nThe sun rises in the west. \n\n");
         });
-        
+
     </script>
 
 </body>
