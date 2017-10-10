@@ -1,6 +1,9 @@
 ## Moodle GIFT generator
 
-Moodle (https://moodle.org/) question format (GIFT) generator. Currently only `multiple-choice` and `matching` type supported. Live demo: http://moodlegift.liveapp.ga
+Moodle (https://moodle.org/) question format (GIFT) generator.
+Currently only `multiple-choice` and `matching` type supported. Live demo: http://moodlegift.liveapp.ga
+
+Edit: I've added true/false types of questions to the generator (not available in the demo)
 
 ### Running
 
@@ -49,6 +52,15 @@ File: https://github.com/yohanesgultom/moodle-gift-generator/blob/master/example
 	=<p>What is the name of Saturn’s largest moon?<br></p> -> Titan
 }
 ```
+
+### Changelog
+* Added true/false types of questions
+* Added buttons to automatically add the examples to save typing
+
+### Roadmap
+
+I'm adding all available GIFT formats as required. Currently, I only need a handful of types.
+
 
 ### License
 

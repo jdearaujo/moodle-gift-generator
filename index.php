@@ -72,6 +72,34 @@ function parseTFChoice($lines, $tf)
     return $question;
 }
 
+function parseShortAnswer($lines)
+{
+    $question = [];
+    $options = [];
+    foreach ($lines as $j => $line) {
+        if ($j == 0) {
+            $str = getQuestionOrOptionValue($line);
+            $question["name"] = convertToSafeName($str);
+            $question["question"] = convertToSafeHTML($str);
+            $question["type"] = "ShortAnswerQuestion";
+        } else {
+            if (isOption($line)) {
+                $options[$j-1]["text"] = convertToSafeHTML(getQuestionOrOptionValue($line));
+                $options[$j-1]["answer"] = isAnswer($line);
+            } else {
+                // handle multiple line question or option
+                if (empty($options)) {
+                    $question["question"] .= getQuestionOrOptionValue($line);
+                } else {
+                    $options[$j-2] = (string)$options[$j-2].getQuestionOrOptionValue($line);
+                }
+            }
+        }
+    }
+    $question["options"] = $options;
+    return $question;
+}
+
 function isOption($str)
 {
     $firstDot = strpos($str, ".");
@@ -220,6 +248,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $questions[$i] = parseTFChoice($lines,"true");
             } elseif (strpos(strtolower($lines[0]), 'false') === 0) {
                 $questions[$i] = parseTFChoice($lines, "false");
+            } elseif (strpos(strtolower($lines[0]), 'shortanswer') === 0) {
+                $questions[$i] = parseShortAnswer($lines);
             } else {
                 //do nothing
             }
@@ -282,6 +312,8 @@ function renderGift($questions, $filename)
             echo "{TRUE";
         } elseif ($q["type"] === "false") {
             echo "{FALSE";
+        } elseif ($q["type"] === "shortanswer") {
+            echo "shortanswer";
         }
         echo "}\n\n";
     }
@@ -388,6 +420,7 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST" || count($errors) > 0) {
                 Multiple choice button<br>
                 Matching example button<br>
                 True/False buttons<br>
+                Short answer button<br>
                                                 
             </p>
             <br>
@@ -403,6 +436,8 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST" || count($errors) > 0) {
               <div class="or"></div>
               <a href="" class="red ui button" id="add_false_choice"><i class="icon add"></i> Add False</a>
             </div>
+
+            <a href="" class="green ui button" id="add_short_answer"><i class="icon add"></i> Add short answer</a>
         </div>    
 
 
@@ -454,6 +489,12 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST" || count($errors) > 0) {
             event.preventDefault();
             //append false choice
             $("textarea[name=source]").append("False\nFalseStatement about the sun\nThe sun rises in the west. \n\n");
+        });
+
+        $("#add_short_answer").on("click", function() {
+            event.preventDefault();
+            //append short answer example to textarea
+            $("textarea[name=source]").append("Shortanswer.Blahblahblah\n\n");
         });
 
     </script>
